@@ -1,103 +1,90 @@
-# Metabase
+# Metabase Multi-Plataforma
 
-[Metabase](https://www.metabase.com) is the easy, open-source way for everyone in your company to ask questions and learn from data.
+Versão modificada do Metabase com suporte a múltiplas arquiteturas (amd64/arm64).
 
-![Metabase Product Screenshot](docs/images/metabase-product-screenshot.svg)
+## Configuração do CI/CD
 
-[![Latest Release](https://img.shields.io/github/release/metabase/metabase.svg?label=latest%20release)](https://github.com/metabase/metabase/releases)
-[![codecov](https://codecov.io/gh/metabase/metabase/branch/master/graph/badge.svg)](https://codecov.io/gh/metabase/metabase)
-![Docker Pulls](https://img.shields.io/docker/pulls/metabase/metabase)
+### 1. Configurar Secrets no GitHub
 
-## Get started
+Para habilitar o build e push automático para o DockerHub:
 
-The easiest way to get started with Metabase is to sign up for a free trial of [Metabase Cloud](https://store.metabase.com/checkout). You get support, backups, upgrades, an SMTP server, SSL certificate, SoC2 Type 2 security auditing, and more (plus your money goes toward improving Metabase). Check out our quick overview of [cloud vs self-hosting](https://www.metabase.com/docs/latest/cloud/cloud-vs-self-hosting). If you need to, you can always switch to [self-hosting](https://www.metabase.com/docs/latest/installation-and-operation/installing-metabase) Metabase at any time (or vice versa).
+1. Acesse seu repositório no GitHub
+2. Vá para `Settings > Secrets and variables > Actions`
+3. Clique em "New repository secret"
+4. Adicione os seguintes secrets:
+   - `DOCKER_USERNAME`: Seu nome de usuário do DockerHub
+   - `DOCKER_PASSWORD`: Seu token de acesso do DockerHub
 
-## Features
+### 2. Gerar Token do DockerHub
 
-- [Set up in five minutes](https://www.metabase.com/docs/latest/setting-up-metabase.html) (we're not kidding).
-- Let anyone on your team [ask questions](https://www.metabase.com/docs/latest/users-guide/04-asking-questions.html) without knowing SQL.
-- Use the [SQL editor](https://www.metabase.com/docs/latest/questions/native-editor/writing-sql) for more complex queries.
-- Build handsome, interactive [dashboards](https://www.metabase.com/docs/latest/users-guide/07-dashboards.html) with filters, auto-refresh, fullscreen, and custom click behavior.
-- Create [models](https://www.metabase.com/learn/metabase-basics/getting-started/models) that clean up, annotate, and/or combine raw tables.
-- Define canonical [segments and metrics](https://www.metabase.com/docs/latest/administration-guide/07-segments-and-metrics.html) for your team to use.
-- Send data to Slack or email on a schedule with [dashboard subscriptions](https://www.metabase.com/docs/latest/users-guide/dashboard-subscriptions).
-- Set up [alerts](https://www.metabase.com/docs/latest/users-guide/15-alerts.html) to have Metabase notify you when your data changes.
-- [Embed charts and dashboards](https://www.metabase.com/docs/latest/administration-guide/13-embedding.html) in your app, or even [your entire Metabase](https://www.metabase.com/docs/latest/enterprise-guide/full-app-embedding.html).
+1. Acesse [DockerHub](https://hub.docker.com)
+2. Vá para `Account Settings > Security`
+3. Clique em "New Access Token"
+4. Nomeie o token (ex: "GitHub Actions")
+5. Copie o token gerado e salve como `DOCKER_PASSWORD` nos secrets do GitHub
 
-Take a [tour of Metabase](https://www.metabase.com/learn/getting-started/tour-of-metabase).
-
-## Supported databases
-
-- [Officially supported databases](./docs/databases/connecting.md#connecting-to-supported-databases)
-- [Partner and Community drivers](./docs/developers-guide/partner-and-community-drivers.md)
-
-## Installation
-
-Metabase can be run just about anywhere. Check out our [Installation Guides](https://www.metabase.com/docs/latest/operations-guide/installing-metabase).
-
-## Contributing
-
-## Quick Setup: Dev environment
-
-In order to spin up a development environment, you need to start the front end and the backend as follows:
-
-### Frontend quick setup
-
-The following command will install the Javascript dependencies:
+## Estrutura do Projeto
 
 ```
-$ yarn install
+.
+├── .github/workflows/    # Configurações do CI/CD
+├── Dockerfile           # Build multi-plataforma
+├── docker-compose.yml   # Configuração de execução
+└── build-multiarch.sh   # Script de build local
 ```
 
-To build and run without watching changes:
+## Uso Local
 
-```
-$ yarn build
-```
-
-To build and run with hot-reload:
-
-```
-$ yarn build-hot
+Build manual:
+```bash
+./build-multiarch.sh
 ```
 
-### Backend  quick setup
-
-In order to run the backend, you'll need to build the drivers first, and then start the backend:
-
-```
-$ ./bin/build-drivers.sh
-$ clojure -M:run
+Executar localmente:
+```bash
+docker compose up -d
 ```
 
-For a more detailed setup of a dev environment for Metabase, check out our [Developers Guide](./docs/developers-guide/start.md).
+## CI/CD Pipeline
 
-## Internationalization
+O pipeline é executado automaticamente quando:
+- Push para branch main
+- Pull Request para main
 
-We want Metabase to be available in as many languages as possible. See which translations are available and help contribute to internationalization using our project over at [POEditor](https://poeditor.com/join/project/ynjQmwSsGh). You can also check out our [policies on translations](https://www.metabase.com/docs/latest/administration-guide/localization.html).
+Etapas do pipeline:
+1. Setup do ambiente multi-plataforma
+2. Login no DockerHub
+3. Build da imagem (amd64/arm64)
+4. Testes básicos do container
+5. Push para DockerHub (apenas em main)
 
-## Extending Metabase
+## Tags Geradas
 
-Hit our Query API from Javascript to integrate analytics. Metabase enables your application to:
+- `latest`: Última versão estável
+- `sha-{commit}`: Versão específica do commit
+- `{branch-name}`: Versão da branch
+- `{version}`: Tag de versão semântica
 
-- Build moderation interfaces.
-- Export subsets of your users to third party marketing automation software.
-- Provide a custom customer lookup application for the people in your company.
+## Monitoramento
 
-Check out our guide, [Working with the Metabase API](https://www.metabase.com/learn/administration/metabase-api).
+- Builds: Aba "Actions" do GitHub
+- Imagens: Seu repositório no DockerHub
 
-## Security Disclosure
+## Volumes e Persistência
 
-See [SECURITY.md](./SECURITY.md) for details.
+- `metabase-data`: Dados do Metabase
+- `plugins`: Plugins adicionais
 
-## License
+## Configuração da VPS
 
-This repository contains the source code for both the Open Source edition of Metabase, released under the AGPL, as well as the [commercial editions of Metabase](https://www.metabase.com/pricing), which are released under the Metabase Commercial Software License.
+Após o push da imagem, na sua VPS:
 
-See [LICENSE.txt](./LICENSE.txt) for details.
+```bash
+# Atualizar imagem
+docker compose pull
 
-Unless otherwise noted, all files © 2025 Metabase, Inc.
+# Reiniciar serviço
+docker compose up -d
+```
 
-## [Metabase Experts](https://www.metabase.com/partners/)
-
-If you’d like more technical resources to set up your data stack with Metabase, connect with a [Metabase Expert](https://www.metabase.com/partners/?utm_source=readme&utm_medium=metabase-expetrs&utm_campaign=readme).
+O Metabase estará disponível em `http://seu-ip-vps:3000`
