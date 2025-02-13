@@ -1,4 +1,4 @@
-# Metabase Multi-Plataforma
+# Metabase Multi-Plataforma teste
 
 Versão modificada do Metabase com suporte a múltiplas arquiteturas (amd64/arm64).
 
