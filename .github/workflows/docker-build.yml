@@ -67,35 +67,28 @@ jobs:
         run: |
           docker run --rm ${{ env.IMAGE_NAME }} echo "Container test successful"
 
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          version: latest
+          buildkitd-flags: --debug
+          driver-opts: |
+            image=moby/buildkit:master
+
       - name: Build and push (amd64)
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          platforms: linux/amd64
-          push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-          
+        run: |
+          docker buildx bake \
+            --push \
+            --file ./Dockerfile \
+            --set *.platform=linux/amd64 \
+            --builder ${{ github.repository }} \
+            ${{ steps.meta.outputs.tags }}
+
       - name: Build and push (arm64)
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          platforms: linux/arm64
-          push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-          
-      - name: Build and push (multi-arch)
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          platforms: linux/amd64,linux/arm64
-          push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+        run: |
+          docker buildx bake \
+            --push \
+            --file ./Dockerfile \
+            --set *.platform=linux/arm64 \
+            --builder ${{ github.repository }} \
+            ${{ steps.meta.outputs.tags }}
